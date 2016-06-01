@@ -1,5 +1,5 @@
 # set project path
-path.project = "/Users/EB/Google Drive/Projects/Programming/Breweries/"
+path.project = "/Users/EB/breweries/"
 
 # load source files
 setwd(path.project)
@@ -15,10 +15,22 @@ grab.rating <- function(html){
     nodes <- lapply(nodes, function(x) xpathApply(x, path = "//span[@class='muted']", xmlValue))
 
     rating <- strsplit(sapply(nodes, "[[", 1), "|", fixed = TRUE)
-    rating <- as.data.frame(t(sapply(rating, function(x) gsub("[^0-9.]", "", x))))
+    # rating <- as.data.frame(t(sapply(rating, function(x) gsub("[^0-9.]", "", x))))
+    rating <- sapply(rating, function(x) gsub("[^0-9.]", "", x))
+    
+    if(class(rating) != "matrix"){
+        rating <- do.call(rbind, rating)
+    }else{
+        rating <- t(rating)
+    }
+    
+    rating <- as.data.frame(rating)
     rating <- as.data.frame(sapply(rating, as.numeric))
 
     names(rating) <- c("look",  "smell",  "taste", "feel",  "overall")
+
+    # Quick fix if there is no rating -> words usually > 5 = max rating -> remove values > 5
+    rating[rating > 5] <- NA
 
     return(rating)
 }
@@ -48,28 +60,61 @@ grab.style <- function(html){
     return(style)
 }
 
+maxpage <- function(html){
+    links <- xpathApply(html, path = "//a", xmlGetAttr, "href")
+    links <- unlist(links[grepl("&start=", links, fixed = TRUE) &
+                          grepl("beer&sort", links, fixed = TRUE)])
+
+    if(is.null(links)) return(1);
+
+    links <- strsplit(links, "=")
+    maxp  <- max(as.numeric(sapply(links, "[[", 4)))
+
+    return(maxp)
+}
 
 beers.df <- read.csv("beers.csv")
 
-i = 1
+i = 2
 
-url <- sprintf("http://www.beeradvocate.com/beer/profile/%s/%s/", beers.df$brewery[i], beers.df$beer[i])  
+#url <- sprintf("http://www.beeradvocate.com/beer/profile/%s/%s/", beers.df$brewery[i], beers.df$beer[i])  
 
+url <- "http://www.beeradvocate.com/beer/profile/28743/136936/"
+
+maxp <- 1
+iter <- 0
 html <- try(grab(url), silent = TRUE)
 
-# check if there are reviews
-checkreview = xpathApply(html, "//h6", xmlValue)
+j = 0
+while(j <= maxp){
+    if(j == 0) {
+        maxp <- try(maxpage(html))
+        # check if there are reviews
+        checkreview = xpathApply(html, "//h6", xmlValue)
+    }
+    
+    if(j != 0){
+        url <- paste(url, "?view=beer&sort=&start=", j, sep = "")
+        html <- try(grab(url), silent = TRUE)
+    }
 
-if(length(grep("No Reviews", checkreview)) == 0){
-    # rating
-    rating <- grab.rating(html)
+    if(length(grep("No Reviews", checkreview)) == 0){
+        # rating
+        rating <- grab.rating(html)
 
-    # text
-    txt <- grab.text(html)
+        # text
+        txt <- grab.text(html)
 
-    # style
-    style <- grab.style(html)
+        # style
+        style <- grab.style(html)
+    }
+
+    j <- j + 25
+    
+    Sys.sleep(1)
+    print(j)
 }
+
 
 
 
