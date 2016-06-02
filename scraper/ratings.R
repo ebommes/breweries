@@ -16,7 +16,6 @@ grab.rating <- function(html){
     nodes <- lapply(nodes, function(x) xpathApply(x, path = "//span[@class='muted']", xmlValue))
 
     rating <- strsplit(sapply(nodes, "[[", 1), "|", fixed = TRUE)
-    # rating <- as.data.frame(t(sapply(rating, function(x) gsub("[^0-9.]", "", x))))
     rating <- sapply(rating, function(x) gsub("[^0-9.]", "", x))
 
     if(class(rating) != "matrix"){
@@ -80,17 +79,14 @@ maxpage <- function(html){
 grab.review <- function(html, beers.df, sql.l,  i, j){
     url <- "http://www.beeradvocate.com/beer/profile/28743/136936/"
 
-    # maxp <- 1
     iter <- 0
     html <- try(grab(url), silent = TRUE)
 
-    j = 0
+    j <- 0
 
-    if(j == 0) {
-        maxp <- try(maxpage(html))
-        # check if there are reviews
-        checkreview = xpathApply(html, "//h6", xmlValue)
-    }
+    maxp <- try(maxpage(html))
+    # check if there are reviews
+    checkreview = xpathApply(html, "//h6", xmlValue)
 
     while(j <= maxp){
         con <- dbConnect(MySQL(), host = sql.l$host, user = sql.l$user, 
