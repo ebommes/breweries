@@ -93,8 +93,6 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
     # check if id is different
 
     while(j <= maxp){
-        con <- dbConnect(MySQL(), host = sql.l$host, user = sql.l$user, 
-                         password = sql.l$pwd, dbname = sql.l$db)
 
         if(j != 0){
             url <- paste(url, "?view=beer&sort=&start=", j, sep = "")
@@ -116,6 +114,8 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
                    "try-error" %in% class(style)
 
             if(!cond){
+                con <- dbConnect(MySQL(), host = sql.l$host, user = sql.l$user, 
+                         password = sql.l$pwd, dbname = sql.l$db)
                 res <- data.frame(review  = (j+1):(j+length(txt)), 
                                   brewery = rep(beers.df$brewery[i], length(txt)),
                                   beer    = rep(beers.df$beer[i], length(txt)),
@@ -123,11 +123,12 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
                                   txt,
                                   style = rep(style, length(txt)))
 
-            dbWriteTable(con, value = res, name = "reviews", row.names = FALSE,
-                         append = TRUE) 
+                dbWriteTable(con, value = res, name = "reviews", row.names = FALSE,
+                             append = TRUE) 
+                dbDisconnect(con)
             
             }
-            dbDisconnect(con)
+            
         }
 
         j <- j + 25
