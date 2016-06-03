@@ -171,4 +171,5 @@ for i in range(0, len(reviews)):
         db.close()
     except:
         print("OOPS")
+        db.close()
 
