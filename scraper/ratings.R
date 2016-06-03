@@ -86,8 +86,11 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
     j <- 0
 
     maxp <- try(maxpage(html))
+
     # check if there are reviews
     checkreview = xpathApply(html, "//h6", xmlValue)
+
+    # check if id is different
 
     while(j <= maxp){
         con <- dbConnect(MySQL(), host = sql.l$host, user = sql.l$user, 
@@ -112,20 +115,19 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
                    "try-error" %in% class(html) | 
                    "try-error" %in% class(style)
 
-            if(cond){
-                return(-1)
-            }
-
-            res <- data.frame(review  = (j+1):(j+length(txt)), 
-                  brewery = rep(beers.df$brewery[i], length(txt)),
-                  beer    = rep(beers.df$beer[i], length(txt)),
-                  rating, 
-                  txt,
-                  style = rep(style, length(txt)))
+            if(!cond){
+                res <- data.frame(review  = (j+1):(j+length(txt)), 
+                                  brewery = rep(beers.df$brewery[i], length(txt)),
+                                  beer    = rep(beers.df$beer[i], length(txt)),
+                                  rating, 
+                                  txt,
+                                  style = rep(style, length(txt)))
 
             dbWriteTable(con, value = res, name = "reviews", row.names = FALSE,
                          append = TRUE) 
             dbDisconnect(con)
+            }
+
         }
 
         j <- j + 25
