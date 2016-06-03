@@ -125,9 +125,9 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
 
             dbWriteTable(con, value = res, name = "reviews", row.names = FALSE,
                          append = TRUE) 
-            dbDisconnect(con)
+            
             }
-
+            dbDisconnect(con)
         }
 
         j <- j + 25
