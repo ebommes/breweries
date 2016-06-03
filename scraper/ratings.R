@@ -15,7 +15,7 @@ grab.rating <- function(html){
     nodes <- lapply(nodes, function(x) xmlParse(saveXML(x)))
     nodes <- lapply(nodes, function(x) xpathApply(x, path = "//span[@class='muted']", xmlValue))
 
-    rating <- strsplit(sapply(nodes, "[[", 1), "|", fixed = TRUE)
+    rating <- try(strsplit(sapply(nodes, "[[", 1), "|", fixed = TRUE))
     rating <- sapply(rating, function(x) gsub("[^0-9.]", "", x))
 
     if(class(rating) != "matrix"){
@@ -100,13 +100,21 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
 
         if(length(grep("No Reviews", checkreview)) == 0){
             # rating
-            rating <- grab.rating(html)
+            rating <- try(grab.rating(html))
 
             # text
-            txt <- grab.text(html)
+            txt <- try(grab.text(html))
 
             # style: better would be extra table for beer info.
-            style <- grab.style(html)
+            style <- try(grab.style(html))
+
+            cond = "try-error" %in% class(rating) | 
+                   "try-error" %in% class(html) | 
+                   "try-error" %in% class(style)
+
+            if(cond){
+                return(-1)
+            }
 
             res <- data.frame(review  = (j+1):(j+length(txt)), 
                   brewery = rep(beers.df$brewery[i], length(txt)),
@@ -120,13 +128,11 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
             dbDisconnect(con)
         }
 
-
-
         j <- j + 25
         
         Sys.sleep(1)
     }
-
+    return(1)
 }
 
 beers.df <- read.csv("beers.csv")
@@ -134,6 +140,6 @@ beers.df <- read.csv("beers.csv")
 n <- length(beers.df$beer)
   
 for(i in 1:n){
-    print(i)
-    grab.review(html, beers.df, sql.l,  i, j)
+    flag = grab.review(html, beers.df, sql.l,  i, j)
+    if(flag == -1) print(paste("Error in ", i))
 }
