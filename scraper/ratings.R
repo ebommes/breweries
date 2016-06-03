@@ -77,7 +77,8 @@ maxpage <- function(html){
 }
 
 grab.review <- function(html, beers.df, sql.l,  i, j){
-    url <- "http://www.beeradvocate.com/beer/profile/28743/136936/"
+    url <- sprintf("http://www.beeradvocate.com/beer/profile/%s/%s/", 
+                   beers.df$brewery[i], beers.df$beer[i]) 
 
     iter <- 0
     html <- try(grab(url), silent = TRUE)
@@ -106,17 +107,20 @@ grab.review <- function(html, beers.df, sql.l,  i, j){
 
             # style: better would be extra table for beer info.
             style <- grab.style(html)
+
+            res <- data.frame(review  = (j+1):(j+length(txt)), 
+                  brewery = rep(beers.df$brewery[i], length(txt)),
+                  beer    = rep(beers.df$beer[i], length(txt)),
+                  rating, 
+                  txt,
+                  style = rep(style, length(txt)))
+
+            dbWriteTable(con, value = res, name = "reviews", row.names = FALSE,
+                         append = TRUE) 
+            dbDisconnect(con)
         }
 
-        res <- data.frame(review  = (j+1):(j+length(txt)), 
-                          brewery = rep(beers.df$brewery[i], length(txt)),
-                          beer    = rep(beers.df$beer[i], length(txt)),
-                          rating, 
-                          txt,
-                          style = rep(style, length(txt)))
 
-        dbWriteTable(con, value = res, name = "reviews", row.names = FALSE, append = TRUE) 
-        dbDisconnect(con)
 
         j <- j + 25
         
