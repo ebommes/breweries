@@ -55,8 +55,19 @@ create.schema <- function(sql.l){
 
     quer <- dbSendQuery(con, qer)
     dbClearResult(quer)
+
+    # create beer styles db
+    qer <- "CREATE TABLE `styles` (
+         `style` int(11) NOT NULL,
+         `desc` varchar(300) DEFAULT NULL,
+         PRIMARY KEY (`style`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+
+    quer <- dbSendQuery(con, qer)
+    dbClearResult(quer)
     dbDisconnect(con)
 }
+
 
 # Initialize schema, database
 try(create.schema(sql.l), silent = TRUE)
