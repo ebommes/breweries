@@ -45,6 +45,7 @@ def createdb(cred):
     sql = sql + "`brewery` bigint(20) NOT NULL,"
     sql = sql + "`beer` bigint(20) NOT NULL,"
     sql = sql + "`lemma` text,"
+    sql = sql + "`pos` text,"
     sql = sql + "PRIMARY KEY (`review`,`brewery`,`beer`)"
     sql = sql + ") ENGINE=InnoDB DEFAULT CHARSET=utf8;"
 
@@ -62,7 +63,12 @@ def clean(text):
     text = text.replace(',', ' , ')
     text = text.replace('.', ' . ')
     text = text.replace('\\', '')
+    # quick fix for ?s ?ve problem
+    text = text.replace('?s', "s")
+    text = text.replace('?ve', "'ve")
+    text = text.replace('?d', "'d")
     return(str(text))
+
 
 def posWN(posTB):
     if posTB.startswith('J'):
@@ -85,7 +91,17 @@ def pos(blob):
     tokn = len(tok)
     posTB = [pos[1] for pos in blob.pos_tags]
     posW = [posWN(TB) for TB in posTB]
-    res = [tok, posW]
+    
+    token = []
+    pos = []
+
+    for i in range(0, len(posW)):
+        if posW[i] not in [''] and tok[i] not in ['b', "'"]:
+            token.append(tok[i])
+            pos.append(posW[i])
+
+    res = [token, pos]
+
     return res
 
 
@@ -114,7 +130,6 @@ def lem(words, pos):
     lems        = [token.lower() for token in lems]
     return lems
 
-
 # try to create db table
 try:
     createdb(cred)
@@ -124,7 +139,6 @@ except:
 # import
 reviews = read("SELECT * FROM reviews;", cred, "breweries")
 
-i = 0
 for i in range(0, len(reviews)):
 
     # structure
@@ -158,11 +172,12 @@ for i in range(0, len(reviews)):
                        
     cur = db.cursor()
 
-    sql = "INSERT INTO reviewsnlp(review, brewery, beer, lemma) VALUES ("
+    sql = "INSERT INTO reviewsnlp(review, brewery, beer, lemma, pos) VALUES ("
     sql = sql + "'" + str(review.id) + "'" + ", "
     sql = sql + "'" + str(review.brewery) + "'"+ ", "
     sql = sql + "'" + str(review.beer) + "'"+ ", "
-    sql = sql + "'" + review.lem + "'" +");"
+    sql = sql + "'" + review.lem + "'" + ", "
+    sql = sql + "'" + ' '.join(review.pos[1]) + "'" +");"
 
     try:
         cur.execute(sql)
@@ -171,5 +186,3 @@ for i in range(0, len(reviews)):
         db.close()
     except:
         print("OOPS")
-        db.close()
-
