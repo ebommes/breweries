@@ -76,8 +76,8 @@ maxpage <- function(html){
     return(maxp)
 }
 
-grab.review <- function(html, beers.df, sql.l,  i, j){
-    url <- sprintf("http://www.beeradvocate.com/beer/profile/%s/%s/", 
+grab.review <- function(beers.df, sql.l, i){
+    url <- sprintf("https://www.beeradvocate.com/beer/profile/%s/%s/", 
                    beers.df$brewery[i], beers.df$beer[i]) 
 
     iter <- 0
@@ -143,6 +143,6 @@ beers.df <- read.csv("beers.csv")
 n <- length(beers.df$beer)
   
 for(i in 1:n){
-    flag = grab.review(html, beers.df, sql.l,  i, j)
+    flag <- grab.review(beers.df, sql.l,  i)
     if(flag == -1) print(paste("Error in ", i))
 }
