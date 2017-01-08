@@ -1,26 +1,23 @@
-print('Extract 50 beers with highest amount of votes for each style')
-
-# modules
 # scraping
 import requests
 from lxml import html
 
-# mongodb
-from pymongo import MongoClient
+# regular expressions
+import re
 
+# mongodb
+import pymongo
+from pymongo import MongoClient, IndexModel, ASCENDING, DESCENDING
 
 # functions
-def add_beer(beer_id, beer_name, brewery_id, brew_name):
-    db.breweries.update_one({"_id": ident}, {"$push": 
-        {"beers": 
-            {"id": beer_id,
-             'name': beer_name,
-             'brewery': {'brewery_id': brewery_id, 'name': brew_name}
-            }
-        }
-    })
 
-def grab_infos(link):
+def get_html(link):
+    # load html page and parse it
+    page = requests.get(link)
+    tree = html.fromstring(page.content)
+    return tree
+
+def parse_beer_info(link):
     # constants to select range in table
     min_tr = 4
     max_tr = 54
@@ -42,26 +39,58 @@ def grab_infos(link):
     return(beer_id, beer_name, brewery_id, brew_name)
 
 
-# load beer styles
+print('Extract all beer style ids')
+
+# constants
+link = 'https://www.beeradvocate.com/beer/style/'
+tree = get_html(link)
+
+# get link ids and text via xpath
+links_text = tree.xpath('//*[@id="ba-content"]//a/text()')
+links_id = tree.xpath('//*[@id="ba-content"]//a/@href')
+
+# some cleaning
+links_id = [s for s in links_id if '/beer/style/' in s]
+links_id = [re.sub('[^0-9]', '', s) for s in links_id if s]
+links_id = [int(s) for s in links_id if s]
+
+bstyles = list(zip(links_id, links_text))
+
+print('Extract all beers and reviews for styles')
+
+# connect to mongodb client
 client = MongoClient()
 db = client.breweries
-cursor = db.breweries.find()
 
-style_ids = [d['_id'] for d in cursor]
-
-# get beer ids
-for style in style_ids:
+# loop over beer styles and get 50 beers with highest amount of reviews
+for style in bstyles:
     print(style)
-    ident = style
-    link = 'https://www.beeradvocate.com/beer/style/' + str(ident)
-    link = link + '/?sort=revsD'
-    try:
-        beer_id, beer_name, brewery_id, brew_name = grab_infos(link)
-        
-        db.breweries.update({"_id": ident}, {"$set": {"beers": []}})
-        
-        for j in range(0, len(beer_id)):
-            add_beer(beer_id[j], beer_name[j], brewery_id[j], brew_name[j])
+    link = 'https://www.beeradvocate.com/beer/style/%(style)d/?sort=revsD' % {
+           'style': style[0]}
 
+    beer_ids, beer_names, brew_ids, brew_names = [], [], [], []
+    try:
+        beer_ids, beer_names, brew_ids, brew_names = parse_beer_info(link)
+
+        # get beer data in mongodb format
+        beers = [{'beer_id': int(beer_id), 
+                  'brew_id': int(brew_id),
+                  'style_id': style[0],
+                  'beer_name': beer_name,
+                  'brew_name': brew_name,
+                  'style_name': style[1]}
+                 for beer_id, brew_id, beer_name, brew_name, style
+                 in zip(beer_ids, brew_ids, beer_names, brew_names, bstyles)]
+
+        # add beers to mongodb
+        db.reviews.insert(beers)
     except:
-        print("Some problem here!")
+        print('Some Problem here.') # probably less than 50 beers in style
+
+
+# add beer_id and brew_id as compund index
+client = MongoClient()
+db = client.breweries
+
+db.reviews.create_index([('brew_id', DESCENDING), 
+                       ('beer_id', DESCENDING)])
