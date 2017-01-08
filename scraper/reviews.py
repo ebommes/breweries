@@ -130,6 +130,5 @@ for i in range(0, len(beer_ids)):
     except:
         print("Some error here")
 
-
-# get rating back
-#data[0]["reviews"][0][0]["rating"]
+    link, tree, current_max_page = None, None, None
+    reviews, ratings, beer_id, brew_id = None, None, None, None
