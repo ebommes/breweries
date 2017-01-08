@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+"""Scrape beer styles from beeradvocate.com/beer/style/."""
+
 # scraping
 import requests
 from lxml import html
