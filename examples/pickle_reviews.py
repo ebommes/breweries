@@ -48,4 +48,4 @@ for item in data:
 
 # pickle results to data/reviews_sample.p
 os.chdir(project_path + '/data/')
-pickle.dump(beers, open( "reviews_sample.p", "wb"))
+pickle.dump(beers, open('reviews_sample.p', 'wb'))
