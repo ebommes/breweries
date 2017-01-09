@@ -40,3 +40,4 @@
 *.xml
 *.fmt
 *.watcher_pid
+*.ipynb_checkpoints
