@@ -83,8 +83,8 @@ for style in bstyles:
                   'beer_name': beer_name,
                   'brew_name': brew_name,
                   'style_name': style[1]}
-                 for beer_id, brew_id, beer_name, brew_name, style
-                 in zip(beer_ids, brew_ids, beer_names, brew_names, bstyles)]
+                 for beer_id, brew_id, beer_name, brew_name
+                 in zip(beer_ids, brew_ids, beer_names, brew_names)]
 
         # add beers to mongodb
         db.reviews.insert(beers)
