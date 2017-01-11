@@ -50,7 +50,7 @@ def get_chunk(noun_chunk):
     chunk = [lemma for token, lemma in lems if token in interesting_pos]
 
     if len(chunk) > 1:
-        return " ".join(chunk)
+        return ' '.join(chunk)
     else:
         return ''
 
@@ -111,7 +111,7 @@ model.fit(dtm)
 
 # show top 6 terms for topics
 for topic_idx, top_terms in model.top_topic_terms(id2t, top_n=6):
-    print('Topic', topic_idx, ':', ", ".join(top_terms))
+    print('Topic', topic_idx, ':', ', '.join(top_terms))
 
 # assign topics to dtm
 doc_topic_matrix = model.transform(dtm)
@@ -149,7 +149,7 @@ X = pd.DataFrame(doc_topic_matrix)
 # numeric encoding for y variable (beer style)
 bin_encode = {'American Pale Lager': 0,
               'American Porter': 1}
-y = df["style_name"].map(bin_encode)
+y = df['style_name'].map(bin_encode)
 
 # split in train and test set
 X_train, X_test, y_train, y_test = train_test_split(X, y,
@@ -165,7 +165,7 @@ parameters = {'clf__kernel': ('rbf', 'poly', 'linear', 'sigmoid'),
               'clf__gamma': ('auto', 1),
               'clf__C': (10, 1.0, 0.1)}
 
-piper = Pipeline([("clf", SVC(random_state=seed))])
+piper = Pipeline([('clf', SVC(random_state=seed))])
 
 grid_search = GridSearchCV(piper, parameters, n_jobs=3, verbose=1,
                            refit=True, cv=folds)
@@ -176,11 +176,11 @@ print('Best score: %0.3f' % grid_search.best_score_)
 print(grid_search.best_estimator_)
 y_pred = grid_search.predict(X_test)
 
-res = pd.DataFrame({"y_test": pd.Series(y_test)})
+res = pd.DataFrame({'y_test': pd.Series(y_test)})
 res['y_pred'] = y_pred
 
-print(pd.crosstab(res['y_test'], res['y_pred'], rownames=["True"],
-                  colnames=["Predicted"]))
+print(pd.crosstab(res['y_test'], res['y_pred'], rownames=['True'],
+                  colnames=['Predicted']))
 
 print('Accuracy in test set: %0.3f' % accuracy(res['y_pred'], res['y_test']))
 
@@ -197,7 +197,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,
 
 parameters = {'clf__kernel': ('rbf', 'linear')}
 
-piper = Pipeline([("clf", SVC(C=1.0, gamma='auto', random_state=seed))])
+piper = Pipeline([('clf', SVC(C=1.0, gamma='auto', random_state=seed))])
 
 grid_search = GridSearchCV(piper, parameters, n_jobs=3, verbose=1,
                            refit=True, cv=folds)
@@ -208,10 +208,10 @@ print('Best score: %0.3f' % grid_search.best_score_)
 print(grid_search.best_estimator_)
 y_pred = grid_search.predict(X_test)
 
-res = pd.DataFrame({"y_test": pd.Series(y_test)})
+res = pd.DataFrame({'y_test': pd.Series(y_test)})
 res['y_pred'] = y_pred
 
-print(pd.crosstab(res['y_test'], res['y_pred'], rownames=["True"],
-                  colnames=["Predicted"]))
+print(pd.crosstab(res['y_test'], res['y_pred'], rownames=['True'],
+                  colnames=['Predicted']))
 
 print('Accuracy in test set: %0.3f' % accuracy(res['y_pred'], res['y_test']))
