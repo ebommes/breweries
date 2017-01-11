@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # pandas
 import pandas as pd
 
-# sklearn
+# sklearnlinter
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -46,8 +46,7 @@ def get_chunk(noun_chunk):
     """Returns interesting parts of noun chunks."""
 
     interesting_pos = ('NOUN', 'PROPN', 'ADJ', 'ADV', 'VERB')
-    lems = [(token.pos_, token.lemma_) for token in noun_chunk]
-    chunk = [lemma for token, lemma in lems if token in interesting_pos]
+    chunk = [tok.lemma_ for tok in noun_chunk if tok.pos_ in interesting_pos]
 
     if len(chunk) > 1:
         return ' '.join(chunk)
@@ -89,8 +88,7 @@ data = pickle.load(open('2styles_sample.p', 'rb'))
 nlp = spacy.load('en')
 
 # parse reviews
-texts = []
-[texts.append(nlp(review)) for review in data[1]]
+texts = [nlp(review) for review in data[1]]
 
 # create term list
 tl = [term_list(doc) for doc in texts]
