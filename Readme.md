@@ -9,3 +9,6 @@ Python, MongoDB for data storage, SpaCy and textacy for text processing
 
 #### Previously in Use:
 R (scraping) and Python (processing), MySQL for data storage, NLTK for text processing
+
+#### Examples:
+- text classification: [Source Code](examples/text_classification.py), [Jupyter Notebook](examples/text_classification.ipynb) 
