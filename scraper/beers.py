@@ -6,22 +6,22 @@
 import requests
 from lxml import html
 
-# regular expressions
-import re
-
 # mongodb
-import pymongo
-from pymongo import MongoClient, IndexModel, ASCENDING, DESCENDING
+from pymongo import MongoClient, DESCENDING
 
 # functions
 
+
 def get_html(link):
+    """Load HTML page and parse it."""
     # load html page and parse it
     page = requests.get(link)
     tree = html.fromstring(page.content)
     return tree
 
+
 def parse_beer_info(link):
+    """Parse information of beer."""
     # constants to select range in table
     min_tr = 4
     max_tr = 54
@@ -43,24 +43,13 @@ def parse_beer_info(link):
     return(beer_id, beer_name, brewery_id, brew_name)
 
 
-print('Extract all beer style ids')
+bstyles = list(zip([155, 159, 73, 175, 40],
+               ['American Pale Lager', 'American Porter', 'American Brown Ale',
+                'American Black Ale', 'Czech Pilsener']))
 
-# constants
+print('Extract all beers for styles')
+
 link = 'https://www.beeradvocate.com/beer/style/'
-tree = get_html(link)
-
-# get link ids and text via xpath
-links_text = tree.xpath('//*[@id="ba-content"]//a/text()')
-links_id = tree.xpath('//*[@id="ba-content"]//a/@href')
-
-# some cleaning
-links_id = [s for s in links_id if '/beer/style/' in s]
-links_id = [re.sub('[^0-9]', '', s) for s in links_id if s]
-links_id = [int(s) for s in links_id if s]
-
-bstyles = list(zip(links_id, links_text))
-
-print('Extract all beers and reviews for styles')
 
 # connect to mongodb client
 client = MongoClient()
@@ -77,7 +66,7 @@ for style in bstyles:
         beer_ids, beer_names, brew_ids, brew_names = parse_beer_info(link)
 
         # get beer data in mongodb format
-        beers = [{'beer_id': int(beer_id), 
+        beers = [{'beer_id': int(beer_id),
                   'brew_id': int(brew_id),
                   'style_id': style[0],
                   'beer_name': beer_name,
@@ -87,14 +76,14 @@ for style in bstyles:
                  in zip(beer_ids, brew_ids, beer_names, brew_names)]
 
         # add beers to mongodb
-        db.reviews.insert(beers)
+        db.styles.insert(beers)
     except:
-        print('Some Problem here.') # probably less than 50 beers in style
+        print('Some Problem here.')  # probably less than 50 beers in style
 
 
 # add beer_id and brew_id as compund index
 client = MongoClient()
 db = client.breweries
 
-db.reviews.create_index([('brew_id', DESCENDING), 
+db.styles.create_index([('brew_id', DESCENDING),
                        ('beer_id', DESCENDING)])
