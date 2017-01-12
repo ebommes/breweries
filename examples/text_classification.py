@@ -33,9 +33,14 @@ plt.style.use('seaborn-white')
 # functions
 
 
-def get_lem(doc):
-    """Returns lemma of spacy doc if lemma is noun / adjective."""
+# create custom spacy pipeline (don't need entity recognition)
+def spacy_pipe(nlp):
+    """Custom spacy pipeline."""
+    return(nlp.tagger, nlp.parser)
 
+
+def get_lem(doc):
+    """Return lemma of spacy doc if lemma is noun / adjective."""
     interesting_pos = ('NOUN', 'PROPN', 'ADJ')
     lems = [word.lemma_ for word in doc if word.pos_ in interesting_pos]
 
@@ -43,8 +48,7 @@ def get_lem(doc):
 
 
 def get_chunk(noun_chunk):
-    """Returns interesting parts of noun chunks."""
-
+    """Return interesting parts of noun chunks."""
     interesting_pos = ('NOUN', 'PROPN', 'ADJ', 'ADV', 'VERB')
     chunk = [tok.lemma_ for tok in noun_chunk if tok.pos_ in interesting_pos]
 
@@ -55,22 +59,22 @@ def get_chunk(noun_chunk):
 
 
 def term_list(doc):
-    """Returns term list item which is used to create term document matrix"""
-
+    """Return term list item which is used to create term document matrix."""
     tl = []
 
     # lemmata of nouns and adjectives
     tl.extend(get_lem(doc))
 
     # noun chunks
-    chunks = [get_chunk(chunk) for chunk in doc.noun_chunks if chunk]
+    chunks = [get_chunk(chunk) for chunk in doc.noun_chunks]
+    chunks = [chunk for chunk in chunks if chunk]
     tl.extend(chunks)
 
     return tl
 
 
 def get_top_topic(model, doc_topic_matrix):
-    """Returns top topic of estimated topic model."""
+    """Return top topic of estimated topic model."""
     top_topics = model.top_doc_topics(doc_topic_matrix, top_n=1)
     top_topics = [topics[0] for doc_idx, topics in top_topics]
     return top_topics
@@ -85,10 +89,10 @@ os.chdir(project_path + '/data/')
 data = pickle.load(open('2styles_sample.p', 'rb'))
 
 # Load spacy pipeline for English
-nlp = spacy.load('en')
+nlp = spacy.load('en', create_pipeline=spacy_pipe)
 
-# parse reviews
-texts = [nlp(review) for review in data[1]]
+# parse via pipeline
+texts = [doc for doc in nlp.pipe(data[1], n_threads=-1)]
 
 # create term list
 tl = [term_list(doc) for doc in texts]
