@@ -22,7 +22,6 @@ from sklearn.svm import SVC
 import spacy
 import textacy
 
-# import pylab  # show plots
 
 # set path to project -> change if needed
 project_path = '/Users/EB/Google Drive/Projects/breweries'
