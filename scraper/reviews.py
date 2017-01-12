@@ -43,7 +43,7 @@ def get_max_page(max_page, tree, brew_id, beer_id):
     """Scrape maximum review page of beer."""
     link_s = beer_slink(brew_id, beer_id)
     links_a = tree.xpath('//a/@href')
-    links_a = [s.replace(link_s, "") for s in links_a if link_s in s]
+    links_a = [s.replace(link_s, '') for s in links_a if link_s in s]
 
     try:
         maxmax = round(max([int(i) for i in links_a if i != '0#XenForo']) / 25)
@@ -66,8 +66,8 @@ def extr_reviews(tree):
 
     # clean
     res = [r for r in res if r]
-    res = [r.replace("\xa0", "") for r in res]
-    res = [r.replace("\n", "") for r in res]
+    res = [r.replace('\xa0', '') for r in res]
+    res = [r.replace('\n', '') for r in res]
 
     return res
 
@@ -130,11 +130,11 @@ for i in range(0, len(beer_ids)):
                    for review, rating in zip(reviews, ratings)]
 
         # write in mongodb
-        db.styles.update({"beer_id": beer_id, "brew_id": brew_id},
-                         {"$set": {"reviews": []}})
+        db.styles.update({'beer_id': beer_id, 'brew_id': brew_id},
+                         {'$set': {'reviews': []}})
 
-        db.styles.update({"beer_id": beer_id, "brew_id": brew_id}, {"$push":
-                         {"reviews": ratings}})
+        db.styles.update({'beer_id': beer_id, 'brew_id': brew_id}, {'$push':
+                         {'reviews': ratings}})
 
     except:
         print("Some error here")
